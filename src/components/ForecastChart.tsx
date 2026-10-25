@@ -28,7 +28,7 @@ export function ForecastChart({ daily, unitLabel }: ForecastChartProps) {
 
   return (
     <figure className="forecast">
-      <figcaption className="visually-hidden">7-day forecast of daily highs and lows</figcaption>
+      <figcaption className="visually-hidden">Прогноз на 7 дней: дневные максимумы и минимумы</figcaption>
 
       <ResponsiveContainer width="100%" height={180}>
         <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
@@ -37,20 +37,20 @@ export function ForecastChart({ daily, unitLabel }: ForecastChartProps) {
           <YAxis tick={{ fontSize: 12 }} width={56} unit={unitLabel} />
           <Tooltip formatter={(value: unknown) => `${Math.round(Number(value))}${unitLabel}`} />
           <Legend />
-          <Line type="monotone" dataKey="high" name="High" stroke="#ef4444" dot={false} />
-          <Line type="monotone" dataKey="low" name="Low" stroke="#3b82f6" dot={false} />
+          <Line type="monotone" dataKey="high" name="Максимум" stroke="#ef4444" dot={false} />
+          <Line type="monotone" dataKey="low" name="Минимум" stroke="#3b82f6" dot={false} />
         </LineChart>
       </ResponsiveContainer>
 
       {/* The same data as a table, so screen reader users get the numbers without the chart. */}
       <table className="visually-hidden">
-        <caption>Daily high and low temperatures</caption>
+        <caption>Дневные максимальные и минимальные температуры</caption>
         <thead>
           <tr>
-            <th scope="col">Day</th>
-            <th scope="col">High</th>
-            <th scope="col">Low</th>
-            <th scope="col">Conditions</th>
+            <th scope="col">День</th>
+            <th scope="col">Макс.</th>
+            <th scope="col">Мин.</th>
+            <th scope="col">Погода</th>
           </tr>
         </thead>
         <tbody>

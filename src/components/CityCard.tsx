@@ -34,22 +34,22 @@ export function CityCard({ city, unit, onRemove }: CityCardProps) {
     <article className="city-card" aria-labelledby={headingId}>
       <header className="city-card-header">
         <h2 id={headingId}>{formatCityName(city)}</h2>
-        <button type="button" className="remove" aria-label={`Remove ${city.name}`} onClick={() => onRemove(city.id)}>
-          Remove
+        <button type="button" className="remove" aria-label={`Удалить ${city.name}`} onClick={() => onRemove(city.id)}>
+          Удалить
         </button>
       </header>
 
       {forecast.isPending && (
         <p className="muted" role="status">
-          Loading forecast…
+          Загрузка прогноза…
         </p>
       )}
 
       {forecast.isError && (
         <div className="error" role="alert">
-          <p>{forecast.error instanceof Error ? forecast.error.message : 'Could not load the forecast.'}</p>
+          <p>{forecast.error instanceof Error ? forecast.error.message : 'Не удалось загрузить прогноз.'}</p>
           <button type="button" onClick={() => void forecast.refetch()}>
-            Retry
+            Повторить
           </button>
         </div>
       )}
@@ -62,11 +62,11 @@ export function CityCard({ city, unit, onRemove }: CityCardProps) {
             </p>
             <p>{describeWeatherCode(data.current.weather_code)}</p>
             <p className="muted">
-              Wind {Math.round(data.current.wind_speed_10m)} {data.current_units.wind_speed_10m} · updated{' '}
-              {data.current.time.slice(11, 16)} (local time)
+              Ветер {Math.round(data.current.wind_speed_10m)} {data.current_units.wind_speed_10m} · обновлено{' '}
+              {data.current.time.slice(11, 16)} (местное время)
             </p>
           </div>
-          <Suspense fallback={<p className="muted">Loading chart…</p>}>
+          <Suspense fallback={<p className="muted">Загрузка графика…</p>}>
             <ForecastChart daily={data.daily} unitLabel={data.current_units.temperature_2m} />
           </Suspense>
         </>

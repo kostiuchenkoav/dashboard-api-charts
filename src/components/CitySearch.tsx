@@ -29,12 +29,12 @@ export function CitySearch({ onSelect }: CitySearchProps) {
   }
 
   return (
-    <section className="city-search" aria-label="City search">
-      <label htmlFor="city-query">Search for a city</label>
+    <section className="city-search" aria-label="Добавление города">
+      <label htmlFor="city-query">Поиск города</label>
       <input
         id="city-query"
         type="search"
-        placeholder="e.g. Berlin"
+        placeholder="Например, Берлин"
         autoComplete="off"
         value={input}
         onChange={(event) => setInput(event.target.value)}
@@ -48,7 +48,7 @@ export function CitySearch({ onSelect }: CitySearchProps) {
 
       {enabled && search.isError && (
         <p className="error" role="alert">
-          {search.error instanceof Error ? search.error.message : 'Search failed. Please try again.'}
+          {search.error instanceof Error ? search.error.message : 'Поиск не удался. Попробуйте ещё раз.'}
         </p>
       )}
 
@@ -62,7 +62,7 @@ export function CitySearch({ onSelect }: CitySearchProps) {
             const label = formatCityName(city);
             return (
               <li key={city.id}>
-                <button type="button" aria-label={`Add ${label}`} onClick={() => handleSelect(city)}>
+                <button type="button" aria-label={`Добавить ${label}`} onClick={() => handleSelect(city)}>
                   {label}
                 </button>
               </li>

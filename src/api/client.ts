@@ -23,7 +23,7 @@ export async function fetchJson<T>(url: URL, schema: z.ZodType<T>, signal?: Abor
     if (signal?.aborted) {
       throw error;
     }
-    throw new ApiError('Network error. Check your connection and try again.');
+    throw new ApiError('Ошибка сети. Проверьте подключение и попробуйте ещё раз.');
   }
 
   if (!response.ok) {
@@ -33,7 +33,7 @@ export async function fetchJson<T>(url: URL, schema: z.ZodType<T>, signal?: Abor
   const payload: unknown = await response.json();
   const result = schema.safeParse(payload);
   if (!result.success) {
-    throw new ApiError('The weather service returned an unexpected response.');
+    throw new ApiError('Сервис погоды вернул неожиданный ответ.');
   }
   return result.data;
 }

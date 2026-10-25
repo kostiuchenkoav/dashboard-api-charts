@@ -12,7 +12,7 @@ const OPTIONS: { value: TemperatureUnit; label: string }[] = [
 
 export function UnitToggle({ unit, onChange }: UnitToggleProps) {
   return (
-    <div className="unit-toggle" role="group" aria-label="Temperature unit">
+    <div className="unit-toggle" role="group" aria-label="Единицы температуры">
       {OPTIONS.map((option) => (
         <button
           key={option.value}

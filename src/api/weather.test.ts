@@ -54,12 +54,12 @@ describe('fetchForecast', () => {
   it('rejects payloads that do not match the expected shape', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ current: {} })));
 
-    await expect(fetchForecast(berlin, 'celsius')).rejects.toThrow('unexpected response');
+    await expect(fetchForecast(berlin, 'celsius')).rejects.toThrow('неожиданный ответ');
   });
 
   it('wraps network failures in an ApiError', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
 
-    await expect(fetchForecast(berlin, 'celsius')).rejects.toThrow('Network error');
+    await expect(fetchForecast(berlin, 'celsius')).rejects.toThrow('Ошибка сети');
   });
 });

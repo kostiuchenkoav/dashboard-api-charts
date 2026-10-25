@@ -13,7 +13,7 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
   url.search = new URLSearchParams({
     name: query.trim(),
     count: '5',
-    language: 'en',
+    language: 'ru',
     format: 'json',
   }).toString();
 

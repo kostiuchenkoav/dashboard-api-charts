@@ -37,8 +37,8 @@ function mockApi({ failFirstForecast = false }: MockOptions = {}) {
 }
 
 async function addBerlin(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText('Search for a city'), 'Berlin');
-  await user.click(await screen.findByRole('button', { name: 'Add Berlin, Germany' }));
+  await user.type(screen.getByLabelText('Поиск города'), 'Berlin');
+  await user.click(await screen.findByRole('button', { name: 'Добавить Berlin, Germany' }));
 }
 
 describe('Weather dashboard', () => {
@@ -88,7 +88,7 @@ describe('Weather dashboard', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Request failed with status 500');
 
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    await user.click(screen.getByRole('button', { name: 'Повторить' }));
 
     expect(await screen.findByTestId('current-temperature')).toHaveTextContent('12°C');
   });
@@ -100,8 +100,8 @@ describe('Weather dashboard', () => {
 
     await addBerlin(user);
     await screen.findByTestId('current-temperature');
-    await user.click(screen.getByRole('button', { name: 'Remove Berlin' }));
+    await user.click(screen.getByRole('button', { name: 'Удалить Berlin' }));
 
-    expect(screen.getByText(/Search for a city above/)).toBeInTheDocument();
+    expect(screen.getByText(/Найдите город выше/)).toBeInTheDocument();
   });
 });
