@@ -4,7 +4,11 @@
 
 Данные приходят в реальном времени из API [Open-Meteo](https://open-meteo.com/). Ключ API не нужен.
 
-> **Демо:** _добавьте ссылку на развёрнутое приложение после деплоя_
+> **Демо:** [https://kostiuchenkoav.github.io/dashboard-api-charts/](https://kostiuchenkoav.github.io/dashboard-api-charts/)
+
+![Скриншот: dashboard-api-charts](docs/screenshot.png)
+
+*Рис. 1. Погодный дашборд: текущие условия и график на 7 дней. На скриншоте данные Open-Meteo подставлены тестовые, так как съёмка велась без доступа в интернет. В живом демо данные реальные.*
 
 ## Возможности
 
