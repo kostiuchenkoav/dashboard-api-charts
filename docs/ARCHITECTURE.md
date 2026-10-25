@@ -1,115 +1,115 @@
-# Architecture
+# Архитектура
 
-This document describes how the Weather Dashboard is organised, how data moves through it, and why certain choices were made.
+Документ описывает устройство погодного дашборда, путь данных через приложение и причины ключевых решений.
 
-## Overview
+## Обзор
 
-The app is a client-only single-page application. It calls two public Open-Meteo endpoints directly from the browser and keeps user preferences in `localStorage`. There is no backend.
+Приложение представляет собой одностраничное клиентское приложение (SPA). Оно обращается к двум публичным эндпоинтам Open-Meteo напрямую из браузера и хранит пользовательские настройки в `localStorage`. Серверной части нет.
 
 ```
-┌──────────────┐   search text   ┌─────────────────┐   GET /v1/search   ┌──────────────────────────┐
+┌──────────────┐  текст поиска   ┌─────────────────┐   GET /v1/search   ┌──────────────────────────┐
 │  CitySearch  │ ───────────────▶│ TanStack Query  │ ─────────────────▶ │ geocoding-api.open-meteo │
-└──────┬───────┘                 │    (cache)      │                    └──────────────────────────┘
+└──────┬───────┘                 │     (кэш)       │                    └──────────────────────────┘
        │ onSelect(city)          │                 │   GET /v1/forecast ┌──────────────────────────┐
        ▼                         │                 │ ─────────────────▶ │ api.open-meteo.com       │
-┌──────────────────┐  city ids   │                 │                    └──────────────────────────┘
+┌──────────────────┐  id городов │                 │                    └──────────────────────────┘
 │ useFavoriteCities│ ◀──────────▶│                 │
 └──────┬───────────┘             └────────┬────────┘
-       │ cities                           │ forecast data
+       │ cities                           │ данные прогноза
        ▼                                  ▼
-┌──────────────┐   unit          ┌──────────────────┐
-│     App      │ ──────────────▶ │     CityCard     │ ──▶ ForecastChart (lazy)
+┌──────────────┐   единица       ┌──────────────────┐
+│     App      │ ──────────────▶ │     CityCard     │ ──▶ ForecastChart (лениво)
 └──────────────┘                 └──────────────────┘
 ```
 
-## Layers
+## Слои
 
-| Layer | Path | Responsibility | May depend on |
+| Слой | Путь | Ответственность | Может зависеть от |
 |---|---|---|---|
-| Components | `src/components` | Rendering and user interaction | hooks, api types, lib |
-| Hooks | `src/hooks` | Stateful logic shared between components | api, lib |
-| API | `src/api` | HTTP requests, error mapping, runtime validation | lib (none today) |
-| Lib | `src/lib` | Pure helpers, storage, query client configuration | nothing app-specific except types |
+| Компоненты | `src/components` | Отрисовка и взаимодействие с пользователем | hooks, типы api, lib |
+| Хуки | `src/hooks` | Логика с состоянием, общая для компонентов | api, lib |
+| API | `src/api` | HTTP-запросы, маппинг ошибок, проверка данных во время выполнения | lib (сейчас не используется) |
+| Lib | `src/lib` | Чистые утилиты, хранилище, настройка QueryClient | только типы приложения |
 
-Dependencies point downward only. Components never call `fetch` directly, and the API layer knows nothing about React.
+Зависимости идут только вниз. Компоненты не вызывают `fetch` напрямую, а слой API ничего не знает о React.
 
-## Data flow
+## Поток данных
 
-### City search
+### Поиск города
 
-1. `CitySearch` keeps the raw input in local state.
-2. `useDebouncedValue` emits the trimmed value after 300 ms of inactivity.
-3. Once the value has at least two characters, a `useQuery` with key `['geocoding', query]` calls `searchCities`.
-4. Results are shown as buttons. Selecting one calls `addCity` and clears the input.
+1. `CitySearch` хранит введённый текст в локальном состоянии.
+2. `useDebouncedValue` выдаёт обрезанное значение через 300 мс после последнего изменения.
+3. Когда в запросе не меньше двух символов, `useQuery` с ключом `['geocoding', query]` вызывает `searchCities`.
+4. Результаты показываются кнопками. Выбор города вызывает `addCity` и очищает поле.
 
-### Forecast cards
+### Карточки прогноза
 
-1. `App` renders one `CityCard` per tracked city, passing the selected unit.
-2. Each card runs `useQuery` with key `['forecast', city.id, unit]`.
-3. Switching the unit changes the key, so cached data for the other unit is reused if it is still fresh.
-4. Every card refetches every 15 minutes (`refetchInterval`) and uses the default five-minute `staleTime` otherwise.
+1. `App` отрисовывает по одной `CityCard` на каждый отслеживаемый город и передаёт выбранную единицу.
+2. Каждая карточка выполняет `useQuery` с ключом `['forecast', city.id, unit]`.
+3. При смене единицы меняется ключ, поэтому кэш для другой единицы переиспользуется, если он ещё свежий.
+4. Каждая карточка обновляется раз в 15 минут (`refetchInterval`). В остальное время действует `staleTime` в пять минут по умолчанию.
 
-### Persistence
+### Сохранение
 
-- `useFavoriteCities` initialises state from `loadFavorites()` and writes back on every change.
-- `loadFavorites` validates stored JSON against `citySchema`. Corrupted or outdated entries are dropped silently instead of crashing the app.
+- `useFavoriteCities` берёт начальное состояние из `loadFavorites()` и записывает изменения при каждом обновлении.
+- `loadFavorites` проверяет сохранённый JSON по схеме `citySchema`. Повреждённые или устаревшие записи молча отбрасываются, приложение при этом не падает.
 
-## Data validation
+## Проверка данных
 
-Every response is parsed with a zod schema in `fetchJson`:
+Каждый ответ разбирается схемой zod внутри `fetchJson`:
 
-- Compile-time types are inferred from the schemas (`z.infer`), so the TypeScript types and runtime checks cannot drift apart.
-- Invalid payloads raise an `ApiError` with a user-friendly message. The UI never receives a partially valid object.
+- Типы TypeScript выводятся из схем (`z.infer`), поэтому типы и проверки во время выполнения не расходятся.
+- Некорректный ответ вызывает `ApiError` с понятным сообщением. В интерфейс никогда не попадает частично корректный объект.
 
-## Error handling
+## Обработка ошибок
 
-| Failure | Where it is detected | What the user sees |
+| Сбой | Где обнаруживается | Что видит пользователь |
 |---|---|---|
-| Network offline or DNS failure | `fetchJson` (`fetch` rejects) | "Network error. Check your connection and try again." |
-| HTTP 4xx or 5xx | `fetchJson` (`response.ok` is false) | "Request failed with status N" and a Retry button |
-| Payload shape changed | zod `safeParse` | "The weather service returned an unexpected response." |
-| No geocoding matches | Empty `results` | "No cities found for …" |
-| Request cancelled (new search) | `AbortSignal` | Nothing; the query is dropped silently |
+| Нет сети или ошибка DNS | `fetchJson` (`fetch` отклоняет промис) | «Ошибка сети. Проверьте подключение и попробуйте снова.» |
+| HTTP 4xx или 5xx | `fetchJson` (`response.ok` равен false) | «Запрос завершился с кодом N» и кнопка «Повторить» |
+| Изменилась структура ответа | `safeParse` из zod | «Сервис погоды вернул неожиданный ответ.» |
+| Геокодинг ничего не нашёл | Пустое поле `results` | «Города по запросу „…“ не найдены» |
+| Запрос отменён (новый поиск) | `AbortSignal` | Ничего, запрос тихо отбрасывается |
 
-`ApiError` is the only error type the UI needs to understand. Any other exception is shown with a generic message.
+`ApiError` — единственный тип ошибки, который должен понимать интерфейс. Любое другое исключение показывается с общим сообщением.
 
-## State management
+## Управление состоянием
 
-| State | Where it lives | Why |
+| Состояние | Где хранится | Почему |
 |---|---|---|
-| Server data (forecasts, search results) | TanStack Query cache | Caching, retries, refetching and loading flags come for free |
-| Tracked cities | `useFavoriteCities` (state + localStorage) | Small, local, user-owned data |
-| Temperature unit | `App` local state | Affects every card, so it sits at the top of the tree |
-| Search input | `CitySearch` local state | Only used inside that component |
+| Серверные данные (прогнозы, результаты поиска) | Кэш TanStack Query | Кэширование, повторные попытки, перезапросы и флаги загрузки уже реализованы |
+| Отслеживаемые города | `useFavoriteCities` (состояние и localStorage) | Небольшие локальные данные, принадлежащие пользователю |
+| Единица температуры | Локальное состояние `App` | Влияет на все карточки, поэтому находится в корне дерева |
+| Текст поиска | Локальное состояние `CitySearch` | Используется только внутри компонента |
 
-No global store is needed at this size. Adding one would duplicate what TanStack Query already provides.
+Для проекта такого размера глобальное хранилище не нужно. Оно продублировало бы возможности TanStack Query.
 
-## Performance
+## Производительность
 
-- **Code splitting.** `ForecastChart` is loaded with `React.lazy`. Recharts is the largest dependency, so the initial bundle stays small and the chart appears after its chunk loads.
-- **Debouncing.** Geocoding requests start only after the user pauses typing.
-- **Cache reuse.** Cards for the same city and unit share one cache entry, so adding a duplicate city is prevented in state and the network is not hit twice.
-- **Abort on change.** Obsolete geocoding requests are cancelled through `AbortSignal`.
+- **Разделение кода.** `ForecastChart` загружается через `React.lazy`. Recharts — самая тяжёлая зависимость, поэтому начальный бандл остаётся маленьким, а график появляется после загрузки своего чанка.
+- **Отложенный ввод.** Запросы геокодинга начинаются только после паузы в наборе текста.
+- **Переиспользование кэша.** Карточки одного города и единицы используют одну запись в кэше, поэтому повторный запрос к сети не выполняется.
+- **Отмена при изменении.** Устаревшие запросы геокодинга отменяются через `AbortSignal`.
 
-## Accessibility
+## Доступность
 
-- Form controls have explicit labels.
-- Status changes are announced through `role="status"` (loading) and `role="alert"` (errors).
-- Pressed-state buttons use `aria-pressed` rather than changing their text.
-- The chart is complemented by a table with the same values.
+- У элементов формы есть явные подписи.
+- Статусы загрузки передаются через `role="status"`, ошибки — через `role="alert"`.
+- Кнопки-переключатели используют `aria-pressed`, а не меняют текст.
+- График дополнен таблицей с теми же значениями.
 
-## Testing strategy
+## Стратегия тестирования
 
-| Level | Tooling | What it covers |
+| Уровень | Инструменты | Что проверяется |
 |---|---|---|
-| Unit | Vitest | Pure helpers, schemas and storage validation |
-| API | Vitest with stubbed `fetch` | Request URLs, parameters, error mapping |
-| Integration | Testing Library with `user-event` | User flows across components, query caching and error recovery |
+| Unit | Vitest | Чистые утилиты, схемы и валидация хранилища |
+| API | Vitest с подменённым `fetch` | URL и параметры запросов, маппинг ошибок |
+| Интеграция | Testing Library с `user-event` | Пользовательские сценарии между компонентами, кэш запросов и восстановление после ошибки |
 
-Network calls are never made in tests. Fixtures in `src/test/fixtures.ts` match the documented response shape, which keeps the tests readable and deterministic.
+В тестах сетевые запросы не выполняются. Фикстуры в `src/test/fixtures.ts` соответствуют описанной структуре ответов, что делает тесты читаемыми и детерминированными.
 
-## Known trade-offs
+## Компромиссы
 
-- **No backend.** Keeps the project simple and deployable as static files, but it means API calls are visible in the browser. Open-Meteo does not require a key, so no secrets are exposed.
-- **Browser-only persistence.** Cities are not synced across devices. A future version could add accounts with a small backend.
-- **Fixed forecast length.** The app requests 7 days. Changing this only requires editing one parameter in `fetchForecast`.
+- **Без бэкенда.** Проект остаётся простым и разворачивается как статические файлы. Запросы к API видны в браузере, но Open-Meteo не требует ключа, поэтому секреты не раскрываются.
+- **Хранение только в браузере.** Города не синхронизируются между устройствами. В будущем можно добавить аккаунты и небольшой бэкенд.
+- **Фиксированная длина прогноза.** Приложение запрашивает 7 дней. Чтобы изменить это, достаточно поменять один параметр в `fetchForecast`.

@@ -1,22 +1,22 @@
-# External API reference
+# Справочник по внешнему API
 
-The app uses two endpoints from [Open-Meteo](https://open-meteo.com/en/docs). Both are public, need no API key and allow browser requests.
+Приложение использует два эндпоинта [Open-Meteo](https://open-meteo.com/en/docs). Оба публичные, не требуют ключа API и разрешают запросы из браузера.
 
 ## Geocoding API
 
-Used to turn a city name into coordinates.
+Превращает название города в координаты.
 
 - **URL:** `https://geocoding-api.open-meteo.com/v1/search`
-- **Method:** `GET`
+- **Метод:** `GET`
 
-| Parameter | Value in the app | Description |
+| Параметр | Значение в приложении | Описание |
 |---|---|---|
-| `name` | user input, trimmed | City name to search for |
-| `count` | `5` | Maximum number of results |
-| `language` | `en` | Language of the returned names |
-| `format` | `json` | Response format |
+| `name` | введённый пользователем текст, без пробелов по краям | Название города для поиска |
+| `count` | `5` | Максимальное количество результатов |
+| `language` | `en` | Язык названий в ответе |
+| `format` | `json` | Формат ответа |
 
-### Response fields used
+### Используемые поля ответа
 
 ```json
 {
@@ -33,27 +33,27 @@ Used to turn a city name into coordinates.
 }
 ```
 
-- `results` is **absent** when nothing matches. The app treats a missing `results` field as an empty list.
-- `country` and `admin1` are optional and are only shown when present.
+- Поле `results` **отсутствует**, если ничего не найдено. Приложение считает отсутствие `results` пустым списком.
+- `country` и `admin1` необязательны и показываются, только если присутствуют.
 
 ## Forecast API
 
-Used for current conditions and the 7-day daily forecast.
+Используется для текущих условий и прогноза на 7 дней.
 
 - **URL:** `https://api.open-meteo.com/v1/forecast`
-- **Method:** `GET`
+- **Метод:** `GET`
 
-| Parameter | Value in the app | Description |
+| Параметр | Значение в приложении | Описание |
 |---|---|---|
-| `latitude`, `longitude` | from the selected city | Location |
-| `current` | `temperature_2m,wind_speed_10m,weather_code` | Current-conditions variables |
-| `daily` | `temperature_2m_max,temperature_2m_min,weather_code` | Daily variables |
-| `forecast_days` | `7` | Number of forecast days |
-| `timezone` | `auto` | Use the location's local timezone |
-| `temperature_unit` | `celsius` or `fahrenheit` | Chosen in the UI |
-| `wind_speed_unit` | `kmh` | Wind speed unit |
+| `latitude`, `longitude` | из выбранного города | Координаты |
+| `current` | `temperature_2m,wind_speed_10m,weather_code` | Переменные текущих условий |
+| `daily` | `temperature_2m_max,temperature_2m_min,weather_code` | Дневные переменные |
+| `forecast_days` | `7` | Количество дней прогноза |
+| `timezone` | `auto` | Местный часовой пояс места |
+| `temperature_unit` | `celsius` или `fahrenheit` | Выбирается в интерфейсе |
+| `wind_speed_unit` | `kmh` | Единица скорости ветра |
 
-### Response fields used
+### Используемые поля ответа
 
 ```json
 {
@@ -76,35 +76,35 @@ Used for current conditions and the 7-day daily forecast.
 }
 ```
 
-- The UI uses `current_units` for labels, so the displayed unit always matches the data.
-- `weather_code` values follow the WMO interpretation codes. The labels are defined in `src/lib/weatherCodes.ts`.
-- `current.time` is the city's local time without an offset, so the app shows `HH:mm` directly.
+- Приложение берёт подписи единиц из `current_units`, поэтому отображаемая единица всегда совпадает с данными.
+- Значения `weather_code` соответствуют кодам интерпретации погоды WMO. Подписи заданы в `src/lib/weatherCodes.ts`.
+- `current.time` — местное время места без смещения часового пояса, поэтому приложение выводит `ЧЧ:ММ` как есть.
 
-## Validation
+## Проверка данных
 
-Responses are checked with zod schemas in `src/api/schemas.ts`. If a field is missing or has the wrong type, the request fails with `ApiError("The weather service returned an unexpected response.")`. This makes API changes visible during development instead of producing silent rendering bugs.
+Ответы проверяются схемами zod из `src/api/schemas.ts`. Если поле отсутствует или имеет неверный тип, запрос завершается с `ApiError("The weather service returned an unexpected response.")`. Так изменения API видны уже на этапе разработки, а не превращаются в незаметные ошибки отображения.
 
-## Error handling
+## Обработка ошибок
 
-| Situation | HTTP status | App behaviour |
+| Ситуация | HTTP-статус | Поведение приложения |
 |---|---|---|
-| Success | 200 | Data is rendered |
-| Invalid request | 400 | Error message with status shown; Retry available |
-| Rate limited or service error | 429, 5xx | Error message with status shown; TanStack Query retries once before showing the error |
-| Network failure | — | "Network error. Check your connection and try again." |
+| Успех | 200 | Данные отображаются |
+| Некорректный запрос | 400 | Сообщение с кодом статуса и кнопка «Повторить» |
+| Ограничение частоты или ошибка сервиса | 429, 5xx | Сообщение с кодом статуса и кнопка «Повторить»; TanStack Query сначала делает одну повторную попытку |
+| Сбой сети | — | «Ошибка сети. Проверьте подключение и попробуйте снова.» |
 
-## Usage and attribution
+## Использование и атрибуция
 
-- Weather data is licensed under **CC BY 4.0**. The attribution link is in the app footer and must stay visible in any deployment.
-- The free tier is intended for **non-commercial use**. Before using the app commercially, review the current terms and limits on [open-meteo.com](https://open-meteo.com/). If the app's traffic grows, consider Open-Meteo's commercial plans or caching responses on a server.
-- The app makes at most one forecast request per city and unit every 15 minutes, plus geocoding requests after debounced input. Caching keeps this low.
+- Данные о погоде распространяются по лицензии **CC BY 4.0**. Ссылка на источник находится в подвале приложения и должна оставаться видимой в любом развёртывании.
+- Бесплатный тариф предназначен для **некоммерческого использования**. Перед коммерческим применением проверьте актуальные условия и ограничения на [open-meteo.com](https://open-meteo.com/). При росте нагрузки можно перейти на коммерческий тариф Open-Meteo или кэшировать ответы на сервере.
+- Приложение делает не более одного запроса прогноза на город и единицу каждые 15 минут, плюс запросы геокодинга после отложенного ввода. Кэширование держит их количество низким.
 
-## Verifying the API contract
+## Проверка контракта API
 
-The automated tests use fixtures that match the documented shape. To check against the live service, open the URLs above in a browser or run:
+Автоматические тесты используют фикстуры, соответствующие описанной структуре. Чтобы проверить живой сервис, откройте URL из этого документа в браузере или выполните:
 
 ```bash
 curl "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&forecast_days=7"
 ```
 
-If the response shape changes, the zod schemas will reject it and the error message will say so. Update `src/api/schemas.ts` and the fixtures in `src/test/fixtures.ts` together.
+Если структура ответа изменится, схемы zod отклонят её, а сообщение об ошибке укажет на проблему. Обновляйте `src/api/schemas.ts` и фикстуры в `src/test/fixtures.ts` одновременно.

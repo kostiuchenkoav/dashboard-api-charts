@@ -1,53 +1,53 @@
-# Contributing
+# Участие в разработке
 
-Thanks for your interest in improving the Weather Dashboard. This guide explains how to set up the project, what we expect from changes, and how to submit them.
+Спасибо за интерес к улучшению погодного дашборда. Здесь описано, как настроить проект, каких правил придерживаться и как отправить изменения.
 
-## Setup
+## Настройка
 
 ```bash
 npm install
 npm run dev
 ```
 
-Before opening a pull request, make sure these pass locally:
+Перед открытием pull request убедитесь, что локально проходят обе команды:
 
 ```bash
-npm run build    # type-check and production build
-npm test         # full test suite
+npm run build    # проверка типов и production-сборка
+npm test         # все тесты
 ```
 
-## Guidelines
+## Правила
 
-- **Keep layers separated.** Components should not call `fetch` directly; put requests in `src/api`. Put reusable stateful logic in `src/hooks`.
-- **Validate external data.** Any new API response needs a zod schema in `src/api/schemas.ts` and a test for the rejection path.
-- **Test behaviour, not implementation.** Prefer Testing Library queries by role or label over test IDs. Use `data-testid` only when no accessible query fits.
-- **Accessibility matters.** New interactive elements need a label, visible focus styles, and correct ARIA state when they are toggles.
-- **No new dependencies without a reason.** Explain in the pull request why an existing tool cannot do the job.
-- **Update docs with the code.** If behaviour, configuration or API usage changes, update the README and the relevant file in `docs/`.
+- **Разделяйте слои.** Компоненты не должны вызывать `fetch` напрямую: запросы размещаются в `src/api`. Переиспользуемую логику с состоянием размещайте в `src/hooks`.
+- **Проверяйте внешние данные.** Для каждого нового ответа API нужна схема zod в `src/api/schemas.ts` и тест на отклонение некорректных данных.
+- **Тестируйте поведение, а не реализацию.** Предпочитайте запросы Testing Library по роли или подписи. Используйте `data-testid` только тогда, когда ни один доступный запрос не подходит.
+- **Доступность важна.** У новых интерактивных элементов должны быть подписи, видимый фокус и корректное ARIA-состояние для переключателей.
+- **Не добавляйте зависимости без причины.** В pull request объясните, почему существующие инструменты не подходят.
+- **Обновляйте документацию вместе с кодом.** Если меняется поведение, конфигурация или использование API, обновите README и соответствующий файл в `docs/`.
 
-## Commit messages
+## Сообщения коммитов
 
-Use short, imperative subjects, for example `Add hourly forecast view` or `Fix retry button focus after error`. Describe the reason in the body when it is not obvious.
+Пишите короткие заголовки в повелительном наклонении, например `Добавить почасовой прогноз` или `Исправить фокус кнопки повтора после ошибки`. Если причина не очевидна, опишите её в теле коммита.
 
-## Pull requests
+## Pull request
 
-1. Fork the repository and create a branch from `main`.
-2. Make focused changes. One feature or fix per pull request.
-3. Add or update tests for the change.
-4. Run `npm run build` and `npm test`.
-5. Open the pull request and describe what changed, why, and how you tested it. Add screenshots for visual changes.
+1. Сделайте fork репозитория и создайте ветку от `main`.
+2. Вносите точечные изменения: одна функция или исправление на один pull request.
+3. Добавьте или обновите тесты.
+4. Выполните `npm run build` и `npm test`.
+5. Откройте pull request и опишите, что изменилось, зачем и как вы это проверили. Для визуальных изменений приложите скриншоты.
 
-CI runs the same build and test steps on every pull request.
+CI выполняет те же шаги сборки и тестов на каждом pull request.
 
-## Reporting bugs
+## Сообщение об ошибке
 
-Open an issue with:
+Создайте issue и укажите:
 
-- What you expected and what happened
-- Steps to reproduce
-- Browser and operating system
-- Screenshots or console output, if relevant
+- Что вы ожидали и что произошло
+- Шаги для воспроизведения
+- Браузер и операционную систему
+- Скриншоты или вывод консоли, если это важно
 
-## Code of conduct
+## Кодекс поведения
 
-Be respectful and constructive. Assume good intent, and focus feedback on the code rather than the person.
+Будьте уважительны и конструктивны. Исходите из добросовестных намерений и фокусируйте обратную связь на коде, а не на человеке.
